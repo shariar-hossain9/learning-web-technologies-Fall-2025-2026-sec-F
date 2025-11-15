@@ -1,0 +1,25 @@
+<html>
+ <body>
+  <form id="nameForm" onsubmit="return validateForm()">
+    <label>First Name: <input type="text" id="firstName" name="firstName"></label><br>
+    <label>Last Name: <input type="text" id="lastName" name="lastName"></label><br>
+    <button type="submit">Submit</button>
+  </form>
+  <script>
+    function validateForm() {
+      const first = document.getElementById('firstName').value.trim();
+      const last = document.getElementById('lastName').value.trim();
+      if (!first || !last) {
+        alert('Both First Name and Last Name are required.');
+        return false;
+      }
+      if (first.length < 2 || last.length < 2) {
+        alert('Each field must have at least 2 characters.');
+        return false;
+      }
+      // validation passed
+      return true;
+    }
+  </script>
+ </body>
+ </html>

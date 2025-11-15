@@ -1,0 +1,56 @@
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Person Profile</title>
+</head>
+<body>
+ 
+<h1>Gender</h1>
+ 
+<form onsubmit="return validateForm();" onreset="clearErrors();">
+ 
+  <label>Gender:</label><br>
+  <input type="radio" name="gender" id="male"> Male
+  <input type="radio" name="gender" id="female"> Female
+  <input type="radio" name="gender" id="other"> Other
+  <p id="genderErr" style="color:red;"></p>
+  <br>
+ 
+  <input type="submit" value="Submit">
+  <input type="reset" value="Reset">
+</form>
+ 
+<!-- place for success message -->
+<p id="successMsg" style="color:green; font-weight:600;"></p>
+ 
+<script>
+function validateForm() {
+  // clear any previous success message
+  document.getElementById("successMsg").textContent = "";
+ 
+  let valid = true;
+ 
+  // Gender
+  let genderErr = document.getElementById("genderErr");
+  if (
+    !document.getElementById("male").checked &&
+    !document.getElementById("female").checked &&
+    !document.getElementById("other").checked
+  ) {
+    genderErr.innerHTML = " Select gender.";
+    valid = false;
+  } else genderErr.innerHTML = "";
+ 
+  
+  if (!valid) {
+    // don't submit — show errors
+    return false;
+  }
+ 
+ 
+  document.getElementById("genderErr").innerHTML = "";
+}
+</script>
+ 
+</body>
+</html>

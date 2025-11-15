@@ -1,0 +1,62 @@
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Person Profile</title>
+</head>
+<body>
+ 
+<h1>Degree</h1>
+ 
+<form onsubmit="return validateForm();" onreset="clearErrors();">
+ 
+  <label>Degree:</label><br>
+  <input type="checkbox" id="ssc"> SSC
+  <input type="checkbox" id="hsc"> HSC
+  <input type="checkbox" id="bsc"> BSc
+  <p id="degErr" style="color:red;"></p>
+  <br>
+ 
+  <input type="submit" value="Submit">
+  <input type="reset" value="Reset">
+</form>
+ 
+<!-- place for success message -->
+<p id="successMsg" style="color:green; font-weight:600;"></p>
+ 
+<script>
+function validateForm() {
+  // clear any previous success message
+  document.getElementById("successMsg").textContent = "";
+ 
+  let valid = true;
+ 
+  // Degree (at least one)
+  let degErr = document.getElementById("degErr");
+  if (
+    !document.getElementById("ssc").checked &&
+    !document.getElementById("hsc").checked &&
+    !document.getElementById("bsc").checked
+  ) {
+    degErr.innerHTML = " Select at least one degree.";
+    valid = false;
+  } else degErr.innerHTML = "";
+ 
+  if (!valid) {
+    // don't submit — show errors
+    return false;
+  }
+ 
+ 
+  document.getElementById("successMsg").textContent = "Form validated successfully ✅";
+  return false;
+}
+ 
+function clearErrors() {
+  document.getElementById("degErr").innerHTML = "";
+ 
+}
+  
+</script>
+ 
+</body>
+</html>

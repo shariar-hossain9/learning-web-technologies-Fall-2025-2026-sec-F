@@ -1,0 +1,57 @@
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Person Profile</title>
+</head>
+<body>
+ 
+<h1>Profile Picture</h1>
+ 
+<form onsubmit="return validateForm();" onreset="clearErrors();">
+ 
+  <label>Photo:</label>
+  <input type="file" id="picture" accept="image/*">
+  <p id="picErr" style="color:red;"></p>
+  <br>
+ 
+  <input type="submit" value="Submit">
+  <input type="reset" value="Reset">
+</form>
+ 
+<!-- place for success message -->
+<p id="successMsg" style="color:green; font-weight:600;"></p>
+ 
+<script>
+function validateForm() {
+  // clear any previous success message
+  document.getElementById("successMsg").textContent = "";
+ 
+  let valid = true;
+ 
+ // User ID and Picture
+  let pictureInput = document.getElementById("picture");
+  let picture = pictureInput.value; // this is fine for checking selected file in browser
+  let picErr = document.getElementById("picErr");
+ 
+  if (picture === "") {
+    picErr.innerHTML = " Select a picture.";
+    valid = false;
+  } else picErr.innerHTML = "";
+ 
+  if (!valid) {
+    // don't submit — show errors
+    return false;
+  }
+ 
+ 
+  document.getElementById("successMsg").textContent = "Form validated successfully ✅";
+  return false;
+}
+ 
+function clearErrors() {
+  document.getElementById("picErr").innerHTML = "";
+}
+</script>
+ 
+</body>
+</html>

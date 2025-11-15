@@ -1,0 +1,59 @@
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Person Profile</title>
+</head>
+<body>
+ 
+<h1>Date Of Birth</h1>
+ 
+<form onsubmit="return validateForm();" onreset="clearErrors();">
+ 
+  <label>Date of Birth:</label>
+  <input type="date" id="dob">
+  <p id="dobErr" style="color:red;"></p>
+  <br>
+ 
+  <input type="submit" value="Submit">
+  <input type="reset" value="Reset">
+</form>
+ 
+<!-- place for success message -->
+<p id="successMsg" style="color:green; font-weight:600;"></p>
+ 
+<script>
+function validateForm() {
+  // clear any previous success message
+  document.getElementById("successMsg").textContent = "";
+ 
+  let valid = true;
+ 
+  // DOB
+  let dob = document.getElementById("dob").value;
+  let dobErr = document.getElementById("dobErr");
+  let today = new Date();
+  let selected = dob ? new Date(dob) : null;
+  if (dob === "" || !(selected instanceof Date) || isNaN(selected.getTime()) || selected > today) {
+    dobErr.innerHTML = " Enter a valid DOB (not in the future).";
+    valid = false;
+  } else dobErr.innerHTML = "";
+ 
+  if (!valid) {
+    // don't submit — show errors
+    return false;
+  }
+ 
+ 
+  document.getElementById("successMsg").textContent = "Form validated successfully ✅";
+  return false;
+}
+ 
+function clearErrors() {
+ document.getElementById("dobErr").innerHTML = "";
+ 
+}
+</script>
+ 
+</body>
+</html>
+

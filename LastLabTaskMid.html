@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Text & Type Form</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
+        input, select, button { padding: 6px; }
+        #savedContainer { display: flex; flex-direction: column; gap: 5px; }
+        .saved-row input { background: #f0f0f0; }
+    </style>
+</head>
+<body>
+
+<h2>Text & Type Input Form</h2>
+
+<div class="row" id="inputRow">
+    <input type="text" id="textInput" placeholder="Type something">
+    <select id="typeSelect">
+        <option value="">Select type</option>
+        <option>Name</option>
+        <option>Address</option>
+        <option>Title</option>
+    </select>
+    <button id="addBtn">Add</button>
+</div>
+
+<div id="savedContainer"></div>
+<button id="saveBtn">Save</button>
+<div id="result"></div>
+
+<script>
+const savedContainer = document.getElementById("savedContainer");
+let count = 0, max = 6;
+
+document.getElementById("addBtn").onclick = () => {
+    const text = document.getElementById("textInput").value.trim();
+    const type = document.getElementById("typeSelect").value.trim();
+    if (!text || !type) return alert("Both fields required");
+    if (count >= max) return alert("Maximum 6 entries");
+
+   
+    const row = document.createElement("div");
+    row.className = "row saved-row";
+    row.innerHTML = `<input value="${type}" disabled><input value="${text}" disabled>`;
+    savedContainer.appendChild(row);
+
+    document.getElementById("textInput").value = "";
+    document.getElementById("typeSelect").value = "";
+    count++;
+};
+
+document.getElementById("saveBtn").onclick = () => {
+    const rows = savedContainer.querySelectorAll(".saved-row");
+    const result = Array.from(rows)
+        .map((r,i) => {
+            const inputs = r.querySelectorAll("input");
+            return `Row ${i+1}: Type: ${inputs[0].value}, Text: ${inputs[1].value}`;
+        }).join("<br>");
+    document.getElementById("result").innerHTML = `<h3>Saved Data:</h3>${result}`;
+};
+</script>
+
+</body>
+</html>

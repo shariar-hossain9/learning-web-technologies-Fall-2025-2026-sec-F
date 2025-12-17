@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Medicare (Simple Single-File Demo)</title>
+<style>
+  /* Simple, clean styling */
+  :root{
+    --bg:#f4f7fb; --card:#fff; --accent:#2563eb; --muted:#6b7280;
+    --danger:#ef4444; --success:#16a34a; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
+  }
+  body{margin:0;background:var(--bg);color:#0f172a}
+  header{background:linear-gradient(90deg,#0ea5e9,#7c3aed);color:#fff;padding:18px 20px;display:flex;justify-content:space-between;align-items:center}
+  header h1{margin:0;font-size:18px}
+  .container{max-width:1100px;margin:20px auto;padding:16px}
+  .card{background:var(--card);border-radius:10px;padding:16px;box-shadow:0 6px 18px rgba(15,23,42,0.06);margin-bottom:16px}
+  input,select,textarea,button{font:inherit;padding:8px;border-radius:6px;border:1px solid #e6edf3;outline:none}
+  label{display:block;margin-top:8px;color:var(--muted);font-size:13px}
+  .row{display:flex;gap:12px;flex-wrap:wrap}
+  .col{flex:1;min-width:220px}
+  .small{font-size:13px;color:var(--muted)}
+  .btn{background:var(--accent);color:#fff;border:none;padding:10px 12px;border-radius:8px;cursor:pointer}
+  .btn.ghost{background:transparent;color:var(--accent);border:1px solid rgba(37,99,235,0.15)}
+  .danger{background:var(--danger)}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:8px;border-bottom:1px solid #eef2f6;text-align:left}
+  .hidden{display:none}
+  .top-actions{display:flex;gap:8px;align-items:center}
+  .badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#eef2ff;color:#123;background-clip:padding-box;font-size:12px}
+  .log{font-family:monospace;font-size:12px;max-height:160px;overflow:auto;background:#0b1220;color:#cbd5e1;padding:8px;border-radius:6px}
+  .chat{height:260px;overflow:auto;padding:8px;background:#f8fafc;border-radius:6px}
+  .msg.user{text-align:right}
+  .msg .bubble{display:inline-block;padding:8px 10px;border-radius:8px;margin:6px 0;max-width:80%;}
+  .msg.user .bubble{background:#c7f9d6}
+  .msg.bot .bubble{background:#eef2ff}
+  footer{font-size:12px;color:var(--muted);text-align:center;padding:12px}
+  @media (max-width:720px){
+    .row{flex-direction:column}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Medicare — Demo (Phases/Features implemented)</h1>
+  <div style="display:flex;gap:12px;align-items:center">
+    <div id="sessionInfo" class="small">Not signed in</div>
+    <button id="logoutBtn" class="btn ghost hidden">Logout</button>
+  </div>
+</header>
+
+<div class="container">
+  <!-- AUTH: Signup / Login / Forgot -->
+  <div id="authArea" class="card">
+    <div id="authTabs" style="display:flex;gap:8px;margin-bottom:12px">
+      <button id="showSignup" class="btn">Sign up</button>
+      <button id="showLogin" class="btn ghost">Log in</button>
+      <button id="showForgot" class="btn ghost">Forgot</button>
+    </div>
+
+    <div id="signupForm">
+      <h3>Sign up</h3>
+      <div class="row">
+        <div class="col">
+          <label>Role</label>
+          <select id="su_role"><option value="">--select role--</option><option>Patient</option><option>Doctor</option><option>Admin</option></select>
+          <label>Name</label><input id="su_name" placeholder="Full name" />
+          <label>Username</label><input id="su_username" placeholder="Unique username"/>
+        </div>
+        <div class="col">
+          <label>Email</label><input id="su_email" placeholder="email@example.com" />
+          <label>Date of birth</label><input id="su_dob" type="date" />
+          <label>Gender</label>
+          <select id="su_gender"><option>Male</option><option>Female</option><option>Other</option></select>
+        </div>
+        <div class="col">
+          <label>Address</label><input id="su_address" />
+          <label>Password</label><input id="su_password" type="password" />
+          <label>Confirm Password</label><input id="su_cpassword" type="password" />
+        </div>
+      </div>
+      <div style="margin-top:12px">
+        <button id="signupBtn" class="btn">Create account</button>
+        <span id="signupMsg" class="small" style="margin-left:10px;color:var(--danger)"></span>
+      </div>
+    </div>
+
+    <div id="loginForm" class="hidden">
+      <h3>Log in</h3>
+      <div class="row">
+        <div class="col"><label>Username or email</label><input id="li_user" /></div>
+        <div class="col"><label>Password</label><input id="li_pass" type="password" /></div>
+      </div>
+      <div style="margin-top:12px">
+        <label><input id="li_rem" type="checkbox" /> Remember me</label>
+        <button id="loginBtn" class="btn" style="margin-left:8px">Sign in</button>
+        <span id="loginMsg" class="small" style="margin-left:8px;color:var(--danger)"></span>
+      </div>
+    </div>
+
+    <div id="forgotForm" class="hidden">
+      <h3>Forgot Password</h3>
+      <label>Email</label><input id="fp_email" />
+      <div style="margin-top:8px">
+        <button id="fp_send" class="btn">Send code</button>
+        <span id="fp_status" class="small" style="margin-left:8px"></span>
+      </div>
+      <div id="fp_reset_area" class="hidden" style="margin-top:10px">
+        <label>Verification code</label><input id="fp_code" />
+        <label>New password</label><input id="fp_new" type="password" />
+        <label>Confirm password</label><input id="fp_newc" type="password" />
+        <div style="margin-top:8px"><button id="fp_reset" class="btn">Reset password</button><span id="fp_msg" class="small" style="margin-left:8px"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD area -->
+  <div id="dashboards" class="hidden">
+    <!-- Top summary + controls -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <strong id="dashTitle">Dashboard</strong>
+          <div class="small" id="dashRoleInfo">Role: -</div>
+        </div>
+        <div class="top-actions">
+          <div class="small">Auto-logout in <span id="timer">--:--</span></div>
+          <button id="extendSession" class="btn ghost">Extend session</button>
+          <button id="switchUser" class="btn ghost">Switch user (demo)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PATIENT Dashboard -->
+    <div id="patientDash" class="card hidden">
+      <h3>Patient Dashboard</h3>
+      <div class="row">
+        <div class="col card">
+          <h4>Appointments</h4>
+          <table id="pat_appts"><thead><tr><th>Date</th><th>Doctor</th><th>Purpose</th></tr></thead><tbody></tbody></table>
+        </div>
+        <div class="col card">
+          <h4>Doctors</h4>
+          <table id="pat_docs"><thead><tr><th>Name</th><th>Special</th><th>View</th></tr></thead><tbody></tbody></table>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:12px">
+        <div class="col card">
+          <h4>Bed availability</h4>
+          <div>ICU beds available: <strong id="icuCount">0</strong></div>
+          <div>General beds available: <strong id="genCount">0</strong></div>
+        </div>
+        <div class="col card">
+          <h4>Request Ambulance</h4>
+          <label>Pickup location</label><input id="amb_loc" placeholder="Your address or landmark"/>
+          <label>Emergency type</label><input id="amb_type" placeholder="e.g. Chest pain"/>
+          <div style="margin-top:8px"><button id="requestAmb" class="btn">Request Ambulance</button><span id="ambMsg" class="small" style="margin-left:8px"></span></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <h4>Medical history</h4>
+        <table id="pat_history"><thead><tr><th>Date</th><th>Notes</th><th>View</th></tr></thead><tbody></tbody></table>
+      </div>
+
+      <div class="card">
+        <h4>AI Chatbox</h4>
+        <div class="chat" id="chatWindow"></div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <input id="chatInput" placeholder="Ask about appointments, doctors, or services" style="flex:1"/>
+          <button id="chatSend" class="btn">Send</button>
+          <button id="chatClear" class="btn ghost">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DOCTOR Dashboard -->
+    <div id="doctorDash" class="card hidden">
+      <h3>Doctor Dashboard</h3>
+      <div class="row">
+        <div class="col card">
+          <h4>Appointments</h4>
+          <table id="doc_appts"><thead><tr><th>Date</th><th>Patient</th><th>Purpose</th></tr></thead><tbody></tbody></table>
+        </div>
+        <div class="col card">
+          <h4>Patients</h4>
+          <table id="doc_patients"><thead><tr><th>Name</th><th>Last Visit</th><th>View</th></tr></thead><tbody></tbody></table>
+        </div>
+      </div>
+      <div class="card" style="margin-top:12px">
+        <h4>Upload Prescription</h4>
+        <label>Select patient</label>
+        <select id="pres_patient"><option value="">--select--</option></select>
+        <div class="row">
+          <div class="col"><label>Medicine</label><input id="pres_med" /></div>
+          <div class="col"><label>Dosage</label><input id="pres_dosage" /></div>
+          <div class="col"><label>Duration</label><input id="pres_dur" /></div>
+        </div>
+        <label>Notes</label><textarea id="pres_notes" rows="3"></textarea>
+        <div style="margin-top:8px"><button id="pres_upload" class="btn">Upload Prescription</button><span id="presMsg" class="small" style="margin-left:8px"></span></div>
+      </div>
+    </div>
+
+    <!-- ADMIN Dashboard -->
+    <div id="adminDash" class="card hidden">
+      <h3>Admin Dashboard</h3>
+      <div class="row">
+        <div class="col card">
+          <h4>Appointments (All)</h4>
+          <table id="adm_appts"><thead><tr><th>Date</th><th>Patient</th><th>Doctor</th><th>Purpose</th></tr></thead><tbody></tbody></table>
+        </div>
+        <div class="col card">
+          <h4>Ambulance Requests</h4>
+          <table id="adm_amb"><thead><tr><th>Patient</th><th>Location</th><th>Type</th><th>Status</th><th>Action</th></tr></thead><tbody></tbody></table>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:12px">
+        <div class="col card">
+          <h4>Doctors</h4>
+          <table id="adm_docs"><thead><tr><th>Name</th><th>Spec</th><th>Action</th></tr></thead><tbody></tbody></table>
+          <div style="margin-top:8px">
+            <input id="new_doc_name" placeholder="Name"/><input id="new_doc_spec" placeholder="Specialty"/><button id="addDoc" class="btn">Add doctor</button>
+          </div>
+        </div>
+
+        <div class="col card">
+          <h4>Beds Management</h4>
+          <label>ICU available</label><input id="adm_icu" type="number" min="0" />
+          <label>General available</label><input id="adm_gen" type="number" min="0" />
+          <div style="margin-top:8px"><button id="updateBeds" class="btn">Update beds</button><span id="bedsMsg" class="small" style="margin-left:8px"></span></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <h4>Audit Logs</h4>
+        <div id="auditLog" class="log"></div>
+      </div>
+    </div>
+
+    <!-- SUBSCRIPTIONS (available to patient) -->
+    <div id="subscribeCard" class="card hidden">
+      <h3>Subscriptions</h3>
+      <div class="row">
+        <div class="col card">
+          <h4>Plans</h4>
+          <div><label><input type="radio" name="plan" value="Single" checked/> Single</label></div>
+          <div><label><input type="radio" name="plan" value="Family" /> Family</label></div>
+          <div><label><input type="radio" name="plan" value="Student" /> Student</label></div>
+          <div><label><input type="radio" name="plan" value="Premium" /> Premium</label></div>
+        </div>
+        <div class="col card">
+          <h4>Payment</h4>
+          <label>Card number</label><input id="card_no" placeholder="1111 2222 3333 4444" />
+          <label>Expiry (MM/YY)</label><input id="card_exp" placeholder="MM/YY" />
+          <label>CVV</label><input id="card_cvv" placeholder="123" />
+          <div style="margin-top:8px"><button id="payBtn" class="btn">Pay</button><button id="cancelSub" class="btn ghost">Cancel</button><span id="subMsg" class="small" style="margin-left:8px"></span></div>
+        </div>
+      </div>
+      <div class="small" style="margin-top:8px">Note: Payment is simulated for demo purposes only.</div>
+    </div>
+
+  </div>
+
+  <footer class="card small">
+    This is a front-end demo app implementing PRD features: signup/login, dashboards, AI chatbox, subscriptions, ambulance requests, beds, RBAC & audit logs. Data saved to browser storage only. See PRD reference. :contentReference[oaicite:1]{index=1}
+  </footer>
+</div>
+
+<script>
+/*
+  Medicare demo single-file app
+  - Uses localStorage as a fake DB
+  - Implements validation/flows described in PRD:
+    signup (role selection, min password), login, forgot password flow (email-code simulated),
+    patient/doctor/admin dashboards (appointments, doctors, patients), ambulance requests, bed counts,
+    prescriptions upload, subscription payment simulation, auto-logout timer (10 minutes default), audit logs.
+*/
+
+/* ---------- Utilities & "DB" ---------- */
+const DB = {
+  key: 'medicare_db_v1',
+  load(){
+    try {
+      const raw = localStorage.getItem(this.key)
+      return raw ? JSON.parse(raw) : {users:[], appointments:[], doctors:[], patients:[], ambRequests:[], beds:{icu:2,gen:10}, history:[], prescriptions:[], audit:[], subscriptions:{}}
+    } catch(e){return {users:[], appointments:[], doctors:[], patients:[], ambRequests:[], beds:{icu:2,gen:10}, history:[], prescriptions:[], audit:[], subscriptions:{}}}
+  },
+  save(data){ localStorage.setItem(this.key, JSON.stringify(data)) },
+  log(action,detail){
+    const data=this.load(); const entry = {ts:new Date().toISOString(), action, detail}; data.audit.unshift(entry); this.save(data)
+  }
+}
+
+/* seed demo users/doctors if empty */
+(function seed(){
+  const d=DB.load();
+  if(d.users.length===0){
+    d.users.push({username:'alice',email:'alice@demo.com',name:'Alice Patient',role:'Patient',password:'password123',dob:'1990-05-10',gender:'Female',address:'123 Lane'});
+    d.users.push({username:'drbob',email:'bob@clinic.com',name:'Dr Bob',role:'Doctor',password:'docpassword',spec:'Cardiology'});
+    d.users.push({username:'admin',email:'admin@hospital.com',name:'Admin User',role:'Admin',password:'adminpass'});
+    d.doctors.push({id:'d1',name:'Dr Bob',spec:'Cardiology'});
+    d.patients.push({id:'p1',name:'Alice Patient',user:'alice'});
+    d.appointments.push({id:'a1',date:'2025-12-15',patient:'Alice Patient',doctor:'Dr Bob',purpose:'Checkup',owner:'alice'});
+    d.history.push({patient:'alice',date:'2024-11-02',notes:'Annual checkup - all normal'});
+    DB.save(d);
+  }
+})();
+
+/* get/set current session */
+const SESSION_KEY = 'medicare_session_v1'
+function setSession(data){ localStorage.setItem(SESSION_KEY, JSON.stringify(data)); renderSession(); DB.log('session_set', data?data.username||data.email:'none') }
+function getSession(){ const r = localStorage.getItem(SESSION_KEY); return r?JSON.parse(r):null }
+function clearSession(){ localStorage.removeItem(SESSION_KEY); renderSession(); }
+
+/* safe validators */
+function validEmail(e){ return /\S+@\S+\.\S+/.test(e) }
+function passwordOk(p){ return typeof p==='string' && p.length>=8 }
+
+/* ---------- UI wiring ---------- */
+const authArea = document.getElementById('authArea')
+const showSignup = document.getElementById('showSignup')
+const showLogin = document.getElementById('showLogin')
+const showForgot = document.getElementById('showForgot')
+const signupForm = document.getElementById('signupForm')
+const loginForm = document.getElementById('loginForm')
+const forgotForm = document.getElementById('forgotForm')
+const signupBtn = document.getElementById('signupBtn')
+const loginBtn = document.getElementById('loginBtn')
+const logoutBtn = document.getElementById('logoutBtn')
+const fp_send = document.getElementById('fp_send')
+const fp_reset = document.getElementById('fp_reset')
+const fp_reset_area = document.getElementById('fp_reset_area')
+const fp_status = document.getElementById('fp_status')
+const fp_msg = document.getElementById('fp_msg')
+
+const dashboards = document.getElementById('dashboards')
+const dashTitle = document.getElementById('dashTitle')
+const dashRoleInfo = document.getElementById('dashRoleInfo')
+const sessionInfo = document.getElementById('sessionInfo')
+const timerEl = document.getElementById('timer')
+const extendSession = document.getElementById('extendSession')
+const switchUser = document.getElementById('switchUser')
+
+/* Dash sections */
+const patientDash = document.getElementById('patientDash')
+const doctorDash = document.getElementById('doctorDash')
+const adminDash = document.getElementById('adminDash')
+const subscribeCard = document.getElementById('subscribeCard')
+
+/* Patient elements */
+const pat_appts = document.querySelector('#pat_appts tbody')
+const pat_docs = document.querySelector('#pat_docs tbody')
+const pat_history = document.querySelector('#pat_history tbody')
+const icuCount = document.getElementById('icuCount')
+const genCount = document.getElementById('genCount')
+const amb_loc = document.getElementById('amb_loc')
+const amb_type = document.getElementById('amb_type')
+const requestAmb = document.getElementById('requestAmb')
+const ambMsg = document.getElementById('ambMsg')
+
+/* Doctor elements */
+const doc_appts = document.querySelector('#doc_appts tbody')
+const doc_patients = document.querySelector('#doc_patients tbody')
+const pres_patient = document.getElementById('pres_patient')
+const pres_upload = document.getElementById('pres_upload')
+const presMsg = document.getElementById('presMsg')
+
+/* Admin elements */
+const adm_appts = document.querySelector('#adm_appts tbody')
+const adm_amb = document.querySelector('#adm_amb tbody')
+const adm_docs = document.querySelector('#adm_docs tbody')
+const addDoc = document.getElementById('addDoc')
+const new_doc_name = document.getElementById('new_doc_name')
+const new_doc_spec = document.getElementById('new_doc_spec')
+const adm_icu = document.getElementById('adm_icu')
+const adm_gen = document.getElementById('adm_gen')
+const updateBeds = document.getElementById('updateBeds')
+const bedsMsg = document.getElementById('bedsMsg')
+const auditLog = document.getElementById('auditLog')
+
+/* Subscriptions */
+const payBtn = document.getElementById('payBtn')
+const cancelSub = document.getElementById('cancelSub')
+const subMsg = document.getElementById('subMsg')
+
+/* Chat */
+const chatWindow = document.getElementById('chatWindow')
+const chatInput = document.getElementById('chatInput')
+const chatSend = document.getElementById('chatSend')
+const chatClear = document.getElementById('chatClear')
+
+/* Auth form fields */
+const su_role = document.getElementById('su_role')
+const su_name = document.getElementById('su_name')
+const su_username = document.getElementById('su_username')
+const su_email = document.getElementById('su_email')
+const su_dob = document.getElementById('su_dob')
+const su_gender = document.getElementById('su_gender')
+const su_address = document.getElementById('su_address')
+const su_password = document.getElementById('su_password')
+const su_cpassword = document.getElementById('su_cpassword')
+const signupMsg = document.getElementById('signupMsg')
+
+const li_user = document.getElementById('li_user')
+const li_pass = document.getElementById('li_pass')
+const li_rem = document.getElementById('li_rem')
+const loginMsg = document.getElementById('loginMsg')
+
+const fp_email = document.getElementById('fp_email')
+const fp_code = document.getElementById('fp_code')
+const fp_new = document.getElementById('fp_new')
+const fp_newc = document.getElementById('fp_newc')
+
+/* Helpers to switch auth panels */
+showSignup.onclick = ()=>{ signupForm.classList.remove('hidden'); loginForm.classList.add('hidden'); forgotForm.classList.add('hidden'); }
+showLogin.onclick = ()=>{ signupForm.classList.add('hidden'); loginForm.classList.remove('hidden'); forgotForm.classList.add('hidden'); }
+showForgot.onclick = ()=>{ signupForm.classList.add('hidden'); loginForm.classList.add('hidden'); forgotForm.classList.remove('hidden'); }
+
+/* ---------- Signup/Login/Forgot logic ---------- */
+signupBtn.onclick = ()=>{
+  signupMsg.textContent = ''
+  const role = su_role.value, name=su_name.value.trim(), username=su_username.value.trim(), email=su_email.value.trim(), dob=su_dob.value, gender=su_gender.value, address=su_address.value.trim(), pass=su_password.value, cpass=su_cpassword.value
+  if(!role){ signupMsg.textContent='Role must be selected'; return }
+  if(!name || !username || !email){ signupMsg.textContent='Fill all required fields'; return}
+  if(!validEmail(email)){ signupMsg.textContent='Invalid email format'; return}
+  if(!passwordOk(pass)){ signupMsg.textContent='Password must be at least 8 chars'; return}
+  if(pass!==cpass){ signupMsg.textContent='Passwords do not match'; return}
+  const d = DB.load()
+  if(d.users.some(u=>u.username===username || u.email===email)){ signupMsg.textContent='Username or email already exists'; return}
+  const user = {username,email,name,role,password:pass,dob,gender,address,created:new Date().toISOString()}
+  d.users.push(user)
+  if(role==='Doctor') d.doctors.push({id:'d'+(d.doctors.length+1),name,spec:'General'})
+  if(role==='Patient') d.patients.push({id:'p'+(d.patients.length+1),name,user:username})
+  DB.save(d)
+  DB.log('signup',{username,email,role})
+  signupMsg.style.color = 'var(--success)'
+  signupMsg.textContent = 'Account created — please log in'
+  // auto-clear form (small convenience)
+  setTimeout(()=>{ signupMsg.textContent=''; showLogin.click() },1200)
+}
+
+loginBtn.onclick = ()=>{
+  loginMsg.textContent=''
+  const who = li_user.value.trim(), pass = li_pass.value
+  const d = DB.load()
+  const user = d.users.find(u => (u.username===who || u.email===who) && u.password===pass)
+  if(!user){ loginMsg.textContent='Invalid credentials'; return }
+  const session = {username:user.username,role:user.role,name:user.name,email:user.email,loginAt:new Date().toISOString(),remember:li_rem.checked}
+  setSession(session)
+  DB.log('login',{username:user.username,role:user.role})
+  renderDashFor(user.role)
+}
+
+logoutBtn.onclick = ()=>{ DB.log('logout',getSession()); clearSession(); renderLanding(); }
+
+/* Forgot password simulated flow */
+let fp_sim_code = null
+fp_send.onclick = ()=>{
+  const email = fp_email.value.trim()
+  const d = DB.load()
+  if(!email || !validEmail(email)){ fp_status.style.color='var(--danger)'; fp_status.textContent='Enter valid email'; return }
+  const user = d.users.find(u=>u.email===email)
+  if(!user){ fp_status.style.color='var(--danger)'; fp_status.textContent='Email not found'; return }
+  // simulate sending code
+  fp_sim_code = Math.floor(100000 + Math.random()*900000).toString()
+  fp_status.style.color='var(--success)'; fp_status.textContent = 'Verification code sent (simulated). Code: '+fp_sim_code
+  fp_reset_area.classList.remove('hidden')
+  DB.log('forgot_request',{email})
+}
+fp_reset.onclick = ()=>{
+  fp_msg.textContent=''
+  if(fp_code.value.trim()!==fp_sim_code){ fp_msg.style.color='var(--danger)'; fp_msg.textContent='Code mismatch'; return }
+  if(!passwordOk(fp_new.value)){ fp_msg.style.color='var(--danger)'; fp_msg.textContent='Password min 8 chars'; return }
+  if(fp_new.value!==fp_newc.value){ fp_msg.style.color='var(--danger)'; fp_msg.textContent='Passwords must match'; return }
+  const d = DB.load()
+  const user = d.users.find(u=>u.email===fp_email.value.trim())
+  if(!user){ fp_msg.style.color='var(--danger)'; fp_msg.textContent='User missing'; return }
+  user.password = fp_new.value
+  DB.save(d)
+  DB.log('password_reset',{email:user.email})
+  fp_msg.style.color='var(--success)'; fp_msg.textContent='Password reset successful'
+  setTimeout(()=>{ showLogin.click(); fp_reset_area.classList.add('hidden'); fp_status.textContent='' },1200)
+}
+
+/* ---------- Session & Auto-logout timer ---------- */
+let countdownInterval = null
+const AUTO_LOGOUT_SECONDS = 600 // 10 minutes default (per PRD)
+function startTimer(secs = AUTO_LOGOUT_SECONDS){
+  clearInterval(countdownInterval)
+  let t = secs
+  function tick(){
+    const mm = String(Math.floor(t/60)).padStart(2,'0'), ss = String(t%60).padStart(2,'0')
+    timerEl.textContent = mm+':'+ss
+    if(t<=0){ clearInterval(countdownInterval); DB.log('auto_logout', getSession()); alert('Session timed out.'); clearSession(); renderLanding(); }
+    t--
+  }
+  tick()
+  countdownInterval = setInterval(tick,1000)
+}
+extendSession.onclick = ()=>{ startTimer(AUTO_LOGOUT_SECONDS); DB.log('session_extended', getSession()) }
+switchUser.onclick = ()=>{ // small demo convenience: cycle to next user in DB
+  const d = DB.load()
+  const curr = getSession()
+  const next = d.users[(d.users.findIndex(u=>u.username===curr?.username)+1) % d.users.length]
+  setSession({username:next.username,role:next.role,name:next.name,email:next.email})
+  renderDashFor(next.role)
+}
+
+/* render session display and show/hide logout */
+function renderSession(){
+  const s = getSession()
+  if(s){ sessionInfo.textContent = s.name + ' ('+s.role+')'; logoutBtn.classList.remove('hidden'); authArea.classList.add('hidden'); dashboards.classList.remove('hidden'); startTimer(); } 
+  else { sessionInfo.textContent = 'Not signed in'; logoutBtn.classList.add('hidden'); authArea.classList.remove('hidden'); dashboards.classList.add('hidden'); clearInterval(countdownInterval) }
+}
+
+/* ---------- Dashboard rendering ---------- */
+function renderDashFor(role){
+  const s = getSession()
+  dashTitle.textContent = s? (s.name + '\'s Dashboard') : 'Dashboard'
+  dashRoleInfo.textContent = s? ('Role: '+s.role) : ''
+  // hide all role panels
+  patientDash.classList.add('hidden'); doctorDash.classList.add('hidden'); adminDash.classList.add('hidden'); subscribeCard.classList.add('hidden')
+  // populate shared data
+  const d = DB.load()
+  icuCount.textContent = d.beds.icu
+  genCount.textContent = d.beds.gen
+  adm_icu.value = d.beds.icu
+  adm_gen.value = d.beds.gen
+
+  if(!s) return
+  if(role==='Patient'){
+    patientDash.classList.remove('hidden')
+    subscribeCard.classList.remove('hidden')
+    // appointments for this patient (owner: username)
+    const appts = d.appointments.filter(a=>a.owner===s.username)
+    pat_appts.innerHTML = appts.map(a=>`<tr><td>${a.date}</td><td>${a.doctor}</td><td>${a.purpose}</td></tr>`).join('') || '<tr><td colspan=3 class="small">No appointments</td></tr>'
+    // doctors list
+    pat_docs.innerHTML = d.doctors.map(doc=>`<tr><td>${doc.name}</td><td>${doc.spec||'General'}</td><td><button class="btn ghost" onclick="viewDoctor('${doc.id||doc.name}')">Profile</button></td></tr>`).join('')
+    // history
+    const hist = d.history.filter(h=>h.patient===s.username)
+    pat_history.innerHTML = hist.map(h=>`<tr><td>${h.date}</td><td>${h.notes}</td><td><button class="btn ghost">View</button></td></tr>`).join('') || '<tr><td colspan=3 class="small">No history</td></tr>'
+  }
+  if(role==='Doctor'){
+    doctorDash.classList.remove('hidden')
+    // appointments assigned to this doctor
+    const appts = d.appointments.filter(a=>a.doctor.toLowerCase().includes(s.name.toLowerCase()) || a.doctor.toLowerCase().includes(s.username))
+    doc_appts.innerHTML = appts.map(a=>`<tr><td>${a.date}</td><td>${a.patient}</td><td>${a.purpose}</td></tr>`).join('') || '<tr><td colspan=3 class="small">No appointments</td></tr>'
+    // patients list: show patients in DB (for demo)
+    doc_patients.innerHTML = d.patients.map(p=>`<tr><td>${p.name}</td><td>2024-10-01</td><td><button class="btn ghost">View</button></td></tr>`).join('')
+    // fill patient selector
+    pres_patient.innerHTML = '<option value="">--select--</option>'+d.patients.map(p=>`<option value="${p.name}">${p.name}</option>`).join('')
+  }
+  if(role==='Admin'){
+    adminDash.classList.remove('hidden')
+    // appointments
+    adm_appts.innerHTML = d.appointments.map(a=>`<tr><td>${a.date}</td><td>${a.patient}</td><td>${a.doctor}</td><td>${a.purpose}</td></tr>`).join('') || '<tr><td colspan=4 class="small">No appointments</td></tr>'
+    // ambulance requests
+    adm_amb.innerHTML = d.ambRequests.map((r,i)=>`<tr><td>${r.patient}</td><td>${r.location}</td><td>${r.type}</td><td id="ambstat_${i}">${r.status||'pending'}</td><td><button onclick="admAccept(${i})" class="btn">Accept</button> <button onclick="admDispatch(${i})" class="btn ghost">Dispatch</button></td></tr>`).join('') || '<tr><td colspan=5 class="small">No requests</td></tr>'
+    // doctors
+    adm_docs.innerHTML = d.doctors.map((doc,idx)=>`<tr><td>${doc.name}</td><td>${doc.spec||'General'}</td><td><button onclick="admRemoveDoc(${idx})" class="btn ghost">Remove</button></td></tr>`).join('')
+    // audit logs
+    auditLogRender()
+  }
+}
+
+/* expose some functions for inline buttons */
+window.viewDoctor = function(id){
+  const d = DB.load()
+  const doc = d.doctors.find(x=>x.id===id) || d.doctors.find(x=>x.name===id)
+  alert('Doctor profile (demo):\\nName: '+(doc?.name||'N/A')+'\\nSpec: '+(doc?.spec||'General'))
+}
+window.admAccept = function(i){
+  const d=DB.load(); if(!d.ambRequests[i]) return
+  d.ambRequests[i].status='accepted'; DB.save(d); DB.log('amb_update',{index:i,status:'accepted'})
+  document.getElementById('ambstat_'+i).textContent='accepted'
+}
+window.admDispatch = function(i){
+  const d=DB.load(); if(!d.ambRequests[i]) return
+  d.ambRequests[i].status='dispatched'; DB.save(d); DB.log('amb_update',{index:i,status:'dispatched'})
+  document.getElementById('ambstat_'+i).textContent='dispatched'
+}
+window.admRemoveDoc = function(idx){
+  const d=DB.load(); const name = d.doctors[idx]?.name || 'unknown'
+  if(!confirm('Remove '+name+'?')) return
+  d.doctors.splice(idx,1); DB.save(d); DB.log('doc_removed',{name})
+  renderDashFor('Admin')
+}
+
+/* Ambulance request (patient) */
+requestAmb.onclick = ()=>{
+  ambMsg.textContent=''
+  const loc = amb_loc.value.trim(), type = amb_type.value.trim()
+  if(!loc || !type){ ambMsg.style.color='var(--danger)'; ambMsg.textContent='Fill required fields'; return}
+  const s = getSession(); if(!s){ ambMsg.style.color='var(--danger)'; ambMsg.textContent='Must be signed in'; return}
+  const d = DB.load(); const req = {patient:s.name, user:s.username,location:loc,type,status:'pending',ts:new Date().toISOString()}
+  d.ambRequests.unshift(req); DB.save(d); DB.log('amb_request',req)
+  ambMsg.style.color='var(--success)'; ambMsg.textContent='Ambulance requested'
+  // update admin table if admin logged in
+  renderDashFor(s.role)
+}
+
+/* Prescription upload (doctor) */
+pres_upload.onclick = ()=>{
+  presMsg.textContent=''
+  const patient = pres_patient.value, med=document.getElementById('pres_med').value.trim(), dosage=document.getElementById('pres_dosage').value.trim(), dur=document.getElementById('pres_dur').value.trim(), notes=document.getElementById('pres_notes').value.trim()
+  if(!patient || !med || !dosage || !dur){ presMsg.style.color='var(--danger)'; presMsg.textContent='All fields required'; return }
+  const s = getSession(); if(!s){ presMsg.style.color='var(--danger)'; presMsg.textContent='Not signed in'; return }
+  const d=DB.load(); const pres = {id:'pr'+(d.prescriptions.length+1),doctor:s.name,patient,med,dosage,duration:dur,notes,ts:new Date().toISOString()}
+  d.prescriptions.push(pres); DB.save(d); DB.log('prescription_upload',pres)
+  presMsg.style.color='var(--success)'; presMsg.textContent='Prescription uploaded'
+  setTimeout(()=>presMsg.textContent='',1400)
+}
+
+/* Admin: add doctor, update beds */
+addDoc.onclick = ()=>{
+  const name = new_doc_name.value.trim(), spec=new_doc_spec.value.trim()
+  if(!name){ alert('Enter name'); return }
+  const d = DB.load(); d.doctors.push({id:'d'+(d.doctors.length+1),name,spec}); DB.save(d); DB.log('doctor_added',{name,spec})
+  new_doc_name.value=''; new_doc_spec.value=''
+  renderDashFor('Admin')
+}
+updateBeds.onclick = ()=>{
+  const icu = parseInt(adm_icu.value||0), gen = parseInt(adm_gen.value||0)
+  if(icu<0||gen<0){ bedsMsg.style.color='var(--danger)'; bedsMsg.textContent='Invalid numbers'; return }
+  const d = DB.load(); d.beds.icu = icu; d.beds.gen = gen; DB.save(d); DB.log('beds_update',{icu,gen})
+  bedsMsg.style.color='var(--success)'; bedsMsg.textContent='Beds updated'
+  renderDashFor(getSession()?.role)
+  setTimeout(()=>bedsMsg.textContent='',1400)
+}
+
+/* Audit log render */
+function auditLogRender(){
+  const d = DB.load()
+  auditLog.textContent = d.audit.map(a=>a.ts+' | '+a.action+' | '+JSON.stringify(a.detail)).join('\\n')
+}
+
+/* Subscription payment simulation */
+payBtn.onclick = ()=>{
+  subMsg.textContent=''
+  const plan = document.querySelector('input[name="plan"]:checked')?.value || 'Single'
+  const card = document.getElementById('card_no').value.replace(/\s+/g,'')
+  const exp = document.getElementById('card_exp').value.trim()
+  const cvv = document.getElementById('card_cvv').value.trim()
+  if(card.length<12 || !/^[0-9]+$/.test(card)){ subMsg.style.color='var(--danger)'; subMsg.textContent='Invalid card number'; return }
+  if(!/^\d{2}\/\d{2}$/.test(exp)){ subMsg.style.color='var(--danger)'; subMsg.textContent='Invalid expiry, use MM/YY'; return }
+  if(!/^\d{3,4}$/.test(cvv)){ subMsg.style.color='var(--danger)'; subMsg.textContent='Invalid CVV'; return }
+  const s = getSession(); if(!s || s.role!=='Patient'){ subMsg.style.color='var(--danger)'; subMsg.textContent='Only patients can subscribe'; return }
+  const d = DB.load(); d.subscriptions[s.username] = {plan,expiry:new Date(Date.now()+30*24*3600*1000).toISOString()}; DB.save(d); DB.log('subscribe',{user:s.username,plan})
+  subMsg.style.color='var(--success)'; subMsg.textContent='Payment simulated - subscription active'
+}
+
+cancelSub.onclick = ()=>{
+  const s = getSession(); if(!s){ subMsg.style.color='var(--danger)'; subMsg.textContent='Not signed in'; return }
+  const d=DB.load(); delete d.subscriptions[s.username]; DB.save(d); DB.log('subscription_cancel',{user:s.username}); subMsg.style.color='var(--success)'; subMsg.textContent='Subscription cancelled'
+}
+
+/* Chatbot (very simple canned replies + quick actions) */
+function appendChat(who,text){
+  const div = document.createElement('div'); div.className = 'msg '+(who==='user'?'user':'bot'); const bubble = document.createElement('div'); bubble.className='bubble'; bubble.textContent = text; div.appendChild(bubble); chatWindow.appendChild(div); chatWindow.scrollTop = chatWindow.scrollHeight
+}
+chatSend.onclick = ()=>{ const q = chatInput.value.trim(); if(!q) return; appendChat('user',q); chatInput.value=''; DB.log('chat_query',{user:getSession()?.username||'anon',q}); setTimeout(()=>processBot(q),400) }
+chatClear.onclick = ()=>{ chatWindow.innerHTML=''; DB.log('chat_cleared',getSession()) }
+function processBot(q){
+  q = q.toLowerCase()
+  if(q.includes('appointment')) appendChat('bot','You can view or book appointments in your dashboard -> Appointments. Would you like to book one? (demo)')
+  else if(q.includes('doctor')) appendChat('bot','You can see doctors in the Doctors section. Use "View" to open profiles.')
+  else if(q.includes('ambulance')) appendChat('bot','For emergencies, use Request Ambulance in your dashboard. If critical, call local emergency services.')
+  else if(q.includes('help')||q.includes('faq')) appendChat('bot','FAQs: 1) How to book? Use Appointments. 2) Payment? Use Subscriptions. For further help, contact support.')
+  else appendChat('bot','I\'m a demo assistant — I can help with appointments, doctors, ambulance requests, and subscriptions.')
+}
+
+/* ---------- Initial render ---------- */
+function renderLanding(){
+  signupForm.classList.remove('hidden'); loginForm.classList.add('hidden'); forgotForm.classList.add('hidden'); dashboards.classList.add('hidden'); authArea.classList.remove('hidden')
+  logoutBtn.classList.add('hidden')
+}
+renderSession()
+if(getSession()) renderDashFor(getSession().role)
+
+/* Expose some functions to window for inline usage (allowed) */
+window.DB = DB
+window.renderDashFor = renderDashFor
+window.renderSession = renderSession
+</script>
+</body>
+</html>

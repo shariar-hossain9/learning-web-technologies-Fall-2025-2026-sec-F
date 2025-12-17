@@ -1,0 +1,696 @@
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Hospital Portal</title>
+<style></style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div>
+        <h1>Hospital Portal</h1>
+        <div class="muted" style="font-size:13px"></div>
+      </div>
+      <div class="pill">Demo</div>
+    </div>
+
+    <!-- Auth card -->
+    <div id="authCard" class="card" style="margin-bottom:14px">
+      <div id="signedOut">
+        <h3 style="margin:0 0 8px 0">Create account</h3>
+        <div class="col">
+          <label>Role</label>
+          <select id="signupRole"><option value="">Select role</option><option value="patient">Patient</option><option value="doctor">Doctor</option><option value="admin">Admin</option></select>
+          <label>Full name</label><input id="signupName" type="text" placeholder="Full name">
+          <label>Username</label><input id="signupUsername" type="text" placeholder="unique username">
+          <label>Email</label><input id="signupEmail" type="email" placeholder="email@example.com">
+          <label>Password</label><input id="signupPassword" type="password" placeholder="min 8 chars">
+          <label>Confirm</label><input id="signupConfirm" type="password" placeholder="confirm">
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button id="signupBtn">Create</button>
+            <button id="openLogin" class="btn-ghost">Sign in</button>
+          </div>
+          <div id="signupMsg" class="muted" style="margin-top:8px"></div>
+        </div>
+      </div>
+
+      <div id="signedIn" style="display:none">
+        <div class="flex-between">
+          <div>
+            <div id="nameLabel" style="font-weight:700"></div>
+            <div class="muted" id="roleLabel"></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
+            <button id="logoutBtn" class="btn-ghost small">Logout</button>
+            <button id="accountBtn" class="small">Account</button>
+          </div>
+        </div>
+        <div class="hr"></div>
+        <div id="accountInfo" class="muted"></div>
+      </div>
+
+      <div id="loginBox" style="margin-top:12px">
+        <h3 style="margin:0 0 8px 0">Sign in</h3>
+        <label>Username or Email</label><input id="loginUser" type="text" placeholder="username or email">
+        <label>Password</label><input id="loginPass" type="password" placeholder="password">
+        <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+          <button id="loginBtn">Sign in</button>
+          <input type="checkbox" id="remember" /><label for="remember" class="muted" style="font-size:13px">Remember me</label>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button id="toSignup" class="btn-ghost">Create</button>
+          <button id="toForgot" class="btn-ghost">Forgot pwd</button>
+        </div>
+        <div id="loginMsg" class="muted" style="margin-top:8px"></div>
+      </div>
+
+      <div id="forgotBox" style="display:none;margin-top:12px">
+        <h3 style="margin:0 0 8px 0">Reset password</h3>
+        <label>Email</label><input id="forgotEmail" type="email">
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button id="sendCode">Send code</button>
+          <button id="backAuth" class="btn-ghost">Back</button>
+        </div>
+        <div id="verifyBlock" style="display:none;margin-top:8px">
+          <label>Code</label><input id="forgotCode" type="text">
+          <label>New password</label><input id="forgotNew" type="password">
+          <label>Confirm</label><input id="forgotConfirm" type="password">
+          <div style="margin-top:8px"><button id="resetBtn">Reset</button></div>
+        </div>
+        <div id="forgotMsg" class="muted" style="margin-top:8px"></div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="card" style="margin-bottom:14px">
+      <h3 style="margin:0 0 8px 0">Quick actions</h3>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button id="seedBtn" class="small btn-ghost">(Re)seed demo</button>
+        <button class="small" onclick="demoLogin('patient_demo')">Patient demo</button>
+        <button class="small" onclick="demoLogin('doctor_demo')">Doctor demo</button>
+        <button class="small" onclick="demoLogin('admin_demo')">Admin demo</button>
+      </div>
+      <div class="muted" style="margin-top:8px">Demo credentials seeded automatically on first run.</div>
+    </div>
+
+    <!-- Audit logs -->
+    <div id="logsCard" class="card" style="display:none">
+      <h3 style="margin:0 0 8px 0">Activity log</h3>
+      <div id="logList" style="max-height:260px;overflow:auto" class="muted"></div>
+    </div>
+
+    <div style="margin-top:10px" class="muted-block">
+      <div style="font-weight:700">Local demo</div>
+      <div class="muted" style="margin-top:6px">All data persists in browser storage (localStorage). Not for production.</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="top">
+      <div>
+        <div style="font-size:14px;color:var(--muted)">Welcome</div>
+        <div style="font-weight:700">Hospital Portal — Light Modern</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div class="muted" id="sysInfo"></div>
+        <div style="width:10px"></div>
+        <div class="pill" id="statusPill">Local</div>
+      </div>
+    </header>
+
+    <!-- Welcome / Hub -->
+    <div id="welcomePanel" class="card">
+      <div class="flex-between">
+        <div>
+          <h2 style="margin:0 0 6px 0">Prototype Features</h2>
+          <div class="muted">Full front-end prototype: role-based dashboards, appointment flows, bed & ambulance management, prescriptions, subscriptions (simulated), chat & audit logs.</div>
+        </div>
+        <div class="center">
+          <div class="badge">Light theme</div>
+        </div>
+      </div>
+      <div class="hr"></div>
+      <div class="grid-2">
+        <div>
+          <h3 style="margin-top:0">Implemented</h3>
+          <ul class="muted">
+            <li>Signup / Login / Reset password</li>
+            <li>Patient, Doctor, Admin dashboards</li>
+            <li>Appointments CRUD</li>
+            <li>Bed management & Admin override</li>
+            <li>Ambulance requests with status</li>
+            <li>Prescription upload by doctors</li>
+            <li>Activity logs (audit)</li>
+            <li>CSV export for appointments</li>
+            <li>AI chat (canned)</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3 style="margin-top:0">System Info</h3>
+          <div id="sysInfo2" class="muted"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PATIENT DASHBOARD -->
+    <div id="patientDash" style="display:none">
+      <div class="card flex-between">
+        <div>
+          <h2 style="margin:0">Patient Dashboard</h2>
+          <div class="muted">Book appointments, request ambulances, view records, chat and manage subscriptions.</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end">
+          <div id="patientPlan" class="badge">Plan: Free</div>
+          <div class="muted" id="patientExpiry"></div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <div class="card">
+            <div class="flex-between">
+              <h3 style="margin:0">Appointments</h3>
+              <div>
+                <button id="bookApptBtn" class="small">Book</button>
+                <button id="cancelApptBtn" class="small btn-ghost">Cancel selected</button>
+              </div>
+            </div>
+            <div id="patientAppts" style="margin-top:8px"></div>
+          </div>
+
+          <div class="card">
+            <h3 style="margin:0 0 8px 0">Medical history & prescriptions</h3>
+            <div id="patientHistory" class="muted"></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <h3 style="margin:0 0 8px 0">Beds</h3>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div><strong>ICU</strong><div class="muted" id="icuCount">0</div></div>
+              <div><strong>General</strong><div class="muted" id="genCount">0</div></div>
+            </div>
+            <div class="hr"></div>
+            <h3 style="margin:0 0 8px 0">Request Ambulance</h3>
+            <label>Pickup location</label><input id="ambPickup" type="text" placeholder="Address">
+            <label>Emergency type</label><input id="ambType" type="text" placeholder="e.g., Cardiac">
+            <div style="display:flex;gap:8px;margin-top:8px"><button id="reqAmbBtn">Request</button></div>
+            <div style="margin-top:12px">
+              <h4 style="margin:0 0 8px 0">Your requests</h4>
+              <div id="myAmbs" class="muted"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 style="margin:0 0 8px 0">AI Assistant</h3>
+            <div class="chat">
+              <div class="messages" id="chatMessages"></div>
+              <div class="chat-input">
+                <input id="chatInput" type="text" placeholder="Ask about appointments, doctors, subscriptions..." style="flex:1">
+                <button id="sendChat">Send</button>
+                <button id="clearChat" class="btn-ghost">Clear</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DOCTOR DASHBOARD -->
+    <div id="doctorDash" style="display:none">
+      <div class="card flex-between">
+        <div>
+          <h2 style="margin:0">Doctor Dashboard</h2>
+          <div class="muted">View your schedule, manage patients and upload prescriptions.</div>
+        </div>
+        <div class="muted" id="doctorNote"></div>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <div class="card">
+            <h3 style="margin:0 0 8px 0">Upcoming appointments</h3>
+            <div id="docAppts" class="muted"></div>
+          </div>
+
+          <div class="card">
+            <h3 style="margin:0 0 8px 0">Patients</h3>
+            <div id="docPatients" class="muted"></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <h3 style="margin:0 0 8px 0">Upload Prescription</h3>
+            <label>Select patient</label><select id="presSelect"></select>
+            <label>Medicine</label><input id="presMed" type="text">
+            <label>Dosage</label><input id="presDosage" type="text">
+            <label>Duration</label><input id="presDuration" type="text">
+            <label>Notes</label><textarea id="presNotes"></textarea>
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <button id="savePres">Save</button>
+              <button id="clearPres" class="btn-ghost">Clear</button>
+            </div>
+          </div>
+          <div class="card">
+            <h3 style="margin:0 0 8px 0">Quick</h3>
+            <div class="row" style="gap:8px">
+              <button id="refreshDocPatients" class="small">Refresh patients</button>
+              <button id="refreshDocAppts" class="small">Refresh appts</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADMIN DASHBOARD -->
+    <div id="adminDash" style="display:none">
+      <div class="card flex-between">
+        <div>
+          <h2 style="margin:0">Admin Dashboard</h2>
+          <div class="muted">Manage hospital resources, ambulances, doctors and appointments.</div>
+        </div>
+        <div class="muted" id="adminNote"></div>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <div class="card">
+            <h3 style="margin:0 0 8px 0">All Appointments</h3>
+            <div id="adminAppts" class="muted"></div>
+            <div style="margin-top:8px"><button id="exportCSV" class="small">Export CSV</button></div>
+          </div>
+
+          <div class="card">
+            <h3 style="margin:0 0 8px 0">Doctors</h3>
+            <div id="adminDoctors" class="muted"></div>
+            <div style="margin-top:8px"><button id="addDoc" class="small">Add demo doctor</button></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <h3 style="margin:0 0 8px 0">Bed Management</h3>
+            <label>ICU count</label><input id="adminIcu" type="number" min="0">
+            <label>General count</label><input id="adminGen" type="number" min="0">
+            <div style="margin-top:8px"><button id="updateBeds" class="small">Update beds</button></div>
+          </div>
+
+          <div class="card">
+            <h3 style="margin:0 0 8px 0">Ambulance Requests</h3>
+            <div id="adminAmbs" class="muted"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="accountModal" style="display:none" class="card">
+      <h3 style="margin:0 0 8px 0">Account</h3>
+      <div id="accountDetails" class="muted"></div>
+      <div style="margin-top:8px"><button id="closeAcc" class="btn-ghost">Close</button></div>
+    </div>
+
+    <div class="footer">Prototype — data stored locally. Replace with backend for production.</div>
+  </main>
+</div>
+
+<script>
+/* Full functionality preserved; light theme UI.
+   Data stored under localStorage key 'hp_full_data_v1_light'.
+   All flows: signup/login/reset, dashboards, appointments, beds, ambulance, prescriptions, subscriptions (simulated), chat, audit logs, CSV export.
+*/
+
+/* ---------- Utilities ---------- */
+const STORAGE_KEY = 'hp_full_data_v1_light';
+const CHAT_PREFIX = 'hp_chat_light_';
+function uid(prefix='id'){ return prefix + '_' + Math.random().toString(36).slice(2,9); }
+function nowISO(){ return new Date().toISOString(); }
+function today(){ return new Date().toISOString().slice(0,10); }
+function daysFromNow(n){ const d=new Date(); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
+function saveData(d){ localStorage.setItem(STORAGE_KEY, JSON.stringify(d, null, 2)); }
+function loadData(){ const s = localStorage.getItem(STORAGE_KEY); if(!s) return seed(true); try{ return JSON.parse(s); } catch(e){ return seed(true); } }
+
+/* ---------- Seed data ---------- */
+function seed(force=false){
+  const exists = localStorage.getItem(STORAGE_KEY);
+  if(exists && !force) return JSON.parse(exists);
+  const data = {
+    users:[
+      {username:'patient_demo', name:'John Patient', email:'patient@demo.com', role:'patient', password:'patient123', dob:'1990-06-12', gender:'Male', address:'Dhaka', subscription:{plan:'Standard', expiry:daysFromNow(30)}, medicalHistory:[{date:daysFromNow(-180), doctor:'doctor_demo', note:'Visited for fever. Advised rest.'}], prescriptions:[]},
+      {username:'doctor_demo', name:'Dr. Jane Smith', email:'doctor@demo.com', role:'doctor', password:'doctor123', dob:'1984-02-02', gender:'Female', address:'City Hospital', patients:['patient_demo']},
+      {username:'admin_demo', name:'Admin User', email:'admin@demo.com', role:'admin', password:'admin123', dob:'1980-01-01', gender:'Other', address:'Head Office'}
+    ],
+    appointments:[
+      {id:uid('apt'), date:daysFromNow(2), patient:'patient_demo', doctor:'doctor_demo', purpose:'General checkup'},
+      {id:uid('apt'), date:daysFromNow(7), patient:'patient_demo', doctor:'doctor_demo', purpose:'Follow up'}
+    ],
+    beds:{icu:4, general:22},
+    ambRequests:[ {id:uid('amb'), patient:'patient_demo', loc:'Sector 5, Road 12', type:'Cardiac', status:'completed', created:nowISO()} ],
+    logs:[ {ts:nowISO(), user:'system', action:'Seeded light-demo data'} ],
+    settings:{created:nowISO()}
+  };
+  saveData(data);
+  return data;
+}
+
+/* ---------- Audit ---------- */
+function logActivity(user, action){
+  const d = loadData();
+  d.logs = d.logs || [];
+  d.logs.unshift({ts:nowISO(), user, action});
+  if(d.logs.length>500) d.logs.length = 500;
+  saveData(d);
+  renderLogs();
+}
+
+/* ---------- Auth state ---------- */
+let currentUser = null;
+function setCurrent(u){ currentUser = u; renderAuth(); }
+function clearCurrent(){ currentUser = null; localStorage.removeItem('hp_remember_light'); renderAuth(); }
+
+/* ---------- dom helpers ---------- */
+const $ = id => document.getElementById(id);
+
+/* ---------- Render helpers ---------- */
+function renderSysInfo(){
+  const d = loadData();
+  $('sysInfo').textContent = `Records: users:${d.users.length} appts:${d.appointments.length}`;
+  $('sysInfo2').textContent = `Data key: ${STORAGE_KEY}`;
+}
+function renderLogs(){
+  const d = loadData();
+  const el = $('logList'); if(!el) return;
+  el.innerHTML = '';
+  (d.logs||[]).slice(0,40).forEach(l=>{
+    const row = document.createElement('div');
+    row.style.padding='8px'; row.style.borderBottom='1px solid rgba(15,23,36,0.03)';
+    row.innerHTML = `<div style="font-size:13px">${l.action}</div><div class="muted" style="font-size:12px">${l.user} • ${new Date(l.ts).toLocaleString()}</div>`;
+    el.appendChild(row);
+  });
+}
+
+/* ---------- Auth UI ---------- */
+function renderAuth(){
+  const d = loadData();
+  const remember = localStorage.getItem('hp_remember_light');
+  // auto-login if remember exists and currentUser null
+  if(remember && !currentUser){
+    const u = d.users.find(x=>x.username===remember);
+    if(u){ currentUser = u.username; logActivity(currentUser, 'Auto-login (remember)'); }
+  }
+
+  if(currentUser){
+    const user = d.users.find(u=>u.username===currentUser);
+    if(!user){ currentUser=null; renderAuth(); return; }
+    $('signedOut').style.display='none';
+    $('signedIn').style.display='block';
+    $('nameLabel').textContent = user.name;
+    $('roleLabel').textContent = user.role.toUpperCase();
+    $('accountInfo').innerHTML = `<div><strong>${user.email}</strong></div><div class="muted">${user.address || ''}</div>`;
+    $('logsCard').style.display='block';
+    renderLogs();
+    showDashboard(user.role);
+  } else {
+    $('signedOut').style.display='block';
+    $('signedIn').style.display='none';
+    $('logsCard').style.display='none';
+    hideDashboards();
+    $('welcomePanel').style.display='block';
+    $('chatMessages').innerHTML='';
+  }
+  renderSysInfo();
+}
+
+/* ---------- Validations ---------- */
+function validEmail(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+
+/* ---------- Signup/Login flows ---------- */
+$('signupBtn').addEventListener('click', ()=>{
+  const role = $('signupRole').value.trim();
+  const name = $('signupName').value.trim();
+  const username = $('signupUsername').value.trim();
+  const email = $('signupEmail').value.trim();
+  const pass = $('signupPassword').value;
+  const conf = $('signupConfirm').value;
+  const msg = $('signupMsg'); msg.textContent='';
+  if(!role || !name || !username || !email || !pass || !conf){ msg.textContent='Please fill required fields.'; return; }
+  if(!validEmail(email)){ msg.textContent='Invalid email.'; return; }
+  if(pass.length<8){ msg.textContent='Password min 8 chars.'; return; }
+  if(pass !== conf){ msg.textContent='Passwords do not match.'; return; }
+  const d = loadData();
+  if(d.users.some(u=>u.username===username || u.email===email)){ msg.textContent='Username/email exists.'; return; }
+  const user = {username, name, email, role, password:pass, dob:null, gender:null, address:null, subscription:{plan:'Free', expiry:null}, medicalHistory:[], prescriptions:[]};
+  d.users.push(user); saveData(d); logActivity(username, 'Signed up as ' + role);
+  msg.textContent = 'Account created. You may sign in.';
+  // clear fields
+  $('signupName').value=''; $('signupEmail').value=''; $('signupUsername').value=''; $('signupPassword').value=''; $('signupConfirm').value='';
+});
+
+/* Toggle login/signup */
+$('openLogin').addEventListener('click', ()=> { window.scrollTo(0,0); });
+$('toSignup').addEventListener('click', ()=> { window.scrollTo(0,0); });
+
+$('loginBtn').addEventListener('click', ()=>{
+  const uval = $('loginUser').value.trim(); const pass = $('loginPass').value;
+  const rem = $('remember').checked; const msg = $('loginMsg'); msg.textContent='';
+  if(!uval || !pass){ msg.textContent='Enter username/email and password.'; return; }
+  const d = loadData(); const u = d.users.find(x=>x.username===uval || x.email===uval);
+  if(!u || u.password !== pass){ msg.textContent='Invalid credentials.'; return; }
+  currentUser = u.username; logActivity(currentUser, 'Logged in');
+  if(rem) localStorage.setItem('hp_remember_light', currentUser); else localStorage.removeItem('hp_remember_light');
+  $('loginUser').value=''; $('loginPass').value=''; $('loginMsg').textContent='';
+  renderAuth();
+});
+
+$('logoutBtn').addEventListener('click', ()=>{
+  logActivity(currentUser || 'unknown', 'Logged out');
+  clearCurrent();
+});
+
+/* Account modal */
+$('accountBtn').addEventListener('click', ()=>{
+  if(!currentUser) return alert('Sign in first');
+  const d = loadData(); const u = d.users.find(x=>x.username===currentUser);
+  $('accountDetails').innerHTML = `<div><strong>${u.name}</strong> (${u.username})</div><div class="muted">${u.email}</div><div class="muted">Role: ${u.role}</div><div class="muted">Plan: ${u.subscription && u.subscription.plan ? u.subscription.plan : 'Free'}</div>`;
+  $('accountModal').style.display='block';
+});
+$('closeAcc').addEventListener('click', ()=> $('accountModal').style.display='none');
+
+/* ---------- Forgot password (simulated) ---------- */
+let lastReset = null;
+$('toForgot').addEventListener('click', ()=> { $('forgotBox').style.display='block'; });
+$('backAuth').addEventListener('click', ()=> { $('forgotBox').style.display='none'; });
+
+$('sendCode').addEventListener('click', ()=>{
+  const email = $('forgotEmail').value.trim(); const msg = $('forgotMsg'); msg.textContent='';
+  if(!email || !validEmail(email)){ msg.textContent='Enter valid email.'; return; }
+  const d = loadData(); const u = d.users.find(x=>x.email===email); if(!u){ msg.textContent='No account with that email.'; return; }
+  const code = (Math.floor(100000 + Math.random()*899999)).toString(); lastReset = {email, code, ts:Date.now()};
+  $('verifyBlock').style.display='block';
+  msg.textContent = 'Code sent (simulated). Check console for code.';
+  console.log('Reset code (simulated):', code);
+  logActivity(u.username, 'Requested password reset');
+});
+$('resetBtn').addEventListener('click', ()=>{
+  const code = $('forgotCode').value.trim(), np = $('forgotNew').value, conf = $('forgotConfirm').value, msg = $('forgotMsg'); msg.textContent='';
+  if(!lastReset || code !== lastReset.code){ msg.textContent='Invalid code.'; return; }
+  if(np.length < 8){ msg.textContent='New password min 8 chars.'; return; }
+  if(np !== conf){ msg.textContent='Passwords do not match.'; return; }
+  const d = loadData(); const u = d.users.find(x=>x.email===lastReset.email); if(!u){ msg.textContent='User not found.'; return; }
+  u.password = np; saveData(d); logActivity(u.username, 'Reset password'); msg.textContent='Password reset. Sign in.'; $('verifyBlock').style.display='none'; lastReset = null;
+});
+
+/* ---------- Dashboard routing ---------- */
+function hideDashboards(){ $('patientDash').style.display='none'; $('doctorDash').style.display='none'; $('adminDash').style.display='none'; $('accountModal').style.display='none'; }
+function showDashboard(role){
+  hideDashboards();
+  if(role === 'patient') $('patientDash').style.display='block';
+  else if(role === 'doctor') $('doctorDash').style.display='block';
+  else if(role === 'admin') $('adminDash').style.display='block';
+  $('welcomePanel').style.display='none';
+  renderCommon();
+}
+
+/* ---------- Common rendering ---------- */
+function renderCommon(){
+  renderBeds();
+  renderSysInfo();
+  renderLogs();
+  if(currentUser){
+    const d = loadData(); const u = d.users.find(x=>x.username===currentUser);
+    if(u.role === 'patient') renderPatient(u.username);
+    if(u.role === 'doctor') renderDoctor(u.username);
+    if(u.role === 'admin') renderAdmin(u.username);
+  }
+}
+
+/* ---------- Beds ---------- */
+function renderBeds(){
+  const d = loadData();
+  $('icuCount').textContent = d.beds.icu;
+  $('genCount').textContent = d.beds.general;
+  $('adminIcu').value = d.beds.icu;
+  $('adminGen').value = d.beds.general;
+}
+$('updateBeds').addEventListener('click', ()=>{
+  const icu = parseInt($('adminIcu').value) || 0; const gen = parseInt($('adminGen').value) || 0;
+  const d = loadData(); d.beds.icu = icu; d.beds.general = gen; saveData(d); logActivity(currentUser || 'admin','Updated beds: ICU='+icu+' GEN='+gen); renderBeds(); alert('Beds updated');
+});
+
+/* ---------- Patient flows ---------- */
+function renderPatient(username){
+  const d = loadData(); const u = d.users.find(x=>x.username===username);
+  $('patientPlan').textContent = 'Plan: ' + (u.subscription && u.subscription.plan ? u.subscription.plan : 'Free');
+  $('patientExpiry').textContent = u.subscription && u.subscription.expiry ? 'Expires: ' + u.subscription.expiry : '';
+  renderPatientAppointments(username);
+  renderPatientHistory(username);
+  renderMyAmbs(username);
+  // load chat
+  loadChat(username || 'guest');
+}
+
+function renderPatientAppointments(username){
+  const d = loadData();
+  const appts = d.appointments.filter(a=>a.patient===username).sort((a,b)=>a.date.localeCompare(b.date));
+  if(appts.length===0) { $('patientAppts').innerHTML = '<div class="muted">No upcoming appointments.</div>'; return; }
+  $('patientAppts').innerHTML = appts.map(a=>`<div style="padding:10px;border-bottom:1px solid rgba(15,23,36,0.03)"><div style="display:flex;justify-content:space-between"><div><strong>${a.date}</strong> • <span class="muted">${(d.users.find(u=>u.username===a.doctor)||{name:a.doctor}).name}</span></div><div><input type="radio" name="selAppt" value="${a.id}"></div></div><div class="muted" style="margin-top:6px">${a.purpose}</div></div>`).join('');
+}
+
+$('bookApptBtn').addEventListener('click', ()=>{
+  if(!currentUser) return alert('Sign in as patient');
+  const d = loadData(); const doctors = d.users.filter(u=>u.role==='doctor');
+  if(doctors.length===0) return alert('No doctors available');
+  const doc = prompt('Doctor username (leave blank for first):', doctors[0].username) || doctors[0].username;
+  const date = prompt('Date (YYYY-MM-DD):', daysFromNow(3)); if(!date) return;
+  const purpose = prompt('Purpose:', 'Consultation') || 'Consultation';
+  const apt = {id:uid('apt'), date, patient:currentUser, doctor:doc, purpose};
+  d.appointments.push(apt); saveData(d); logActivity(currentUser, 'Booked appointment on '+date+' with '+doc);
+  renderPatientAppointments(currentUser); renderDoctor(doc); renderAdmin();
+  alert('Appointment booked');
+});
+
+$('cancelApptBtn').addEventListener('click', ()=>{
+  const sel = document.querySelector('input[name=selAppt]:checked'); if(!sel) return alert('Select appointment to cancel');
+  const id = sel.value; const d = loadData(); const idx = d.appointments.findIndex(a=>a.id===id);
+  if(idx>=0){ const removed = d.appointments.splice(idx,1)[0]; saveData(d); logActivity(currentUser,'Cancelled appointment'); renderPatientAppointments(currentUser); renderAdmin(); renderDoctor(removed.doctor); alert('Cancelled'); }
+});
+
+/* Medical history */
+function renderPatientHistory(username){
+  const d = loadData(); const u = d.users.find(x=>x.username===username);
+  const items = (u.medicalHistory||[]).concat(u.prescriptions||[]);
+  $('patientHistory').innerHTML = items.length===0 ? '<div class="muted">No records yet.</div>' : items.map(it=>`<div style="padding:8px;border-bottom:1px solid rgba(15,23,36,0.03)"><div><strong>${it.date||today()}</strong> • <div class="muted">${it.doctorName||it.doctor||''}</div></div><div style="margin-top:6px">${it.note || ('Medicine: '+(it.medicine||''))}</div></div>`).join('');
+}
+
+/* Ambulance */
+$('reqAmbBtn').addEventListener('click', ()=>{
+  if(!currentUser) return alert('Sign in first');
+  const loc = $('ambPickup').value.trim(), type = $('ambType').value.trim();
+  if(!loc || !type) return alert('Enter pickup & type');
+  const d = loadData(); const req = {id:uid('amb'), patient:currentUser, loc, type, status:'requested', created:nowISO()};
+  d.ambRequests.push(req); saveData(d); logActivity(currentUser, 'Requested ambulance: '+type+' at '+loc); $('ambPickup').value=''; $('ambType').value=''; renderMyAmbs(currentUser); renderAdmin();
+  alert('Ambulance requested');
+});
+
+function renderMyAmbs(username){
+  const d = loadData(); const items = (d.ambRequests||[]).filter(a=>a.patient===username).sort((a,b)=>b.created.localeCompare(a.created));
+  $('myAmbs').innerHTML = items.length===0 ? '<div class="muted">No requests</div>' : items.map(a=>`<div style="padding:8px;border-bottom:1px solid rgba(15,23,36,0.03)"><div><strong>${a.type}</strong> • <span class="muted">${a.status}</span></div><div class="muted">${a.loc} • ${new Date(a.created).toLocaleString()}</div></div>`).join('');
+}
+
+/* Chat */
+function appendChat(who,txt){ const m = document.createElement('div'); m.className = 'msg ' + (who==='me'?'me':'bot'); m.textContent = txt; $('chatMessages').appendChild(m); $('chatMessages').scrollTop = $('chatMessages').scrollHeight; }
+$('sendChat').addEventListener('click', ()=> {
+  const t = $('chatInput').value.trim(); if(!t) return;
+  appendChat('me', t); storeChat(currentUser||'guest', {who:'me', text:t, ts:nowISO()}); $('chatInput').value='';
+  setTimeout(()=> { const r = canned(t); appendChat('bot', r); storeChat(currentUser||'guest', {who:'bot', text:r, ts:nowISO()}); }, 400);
+});
+$('clearChat').addEventListener('click', ()=> { localStorage.removeItem(CHAT_PREFIX + (currentUser||'guest')); $('chatMessages').innerHTML=''; });
+
+function storeChat(user,msg){ const k = CHAT_PREFIX + user; const arr = JSON.parse(localStorage.getItem(k) || '[]'); arr.push(msg); localStorage.setItem(k, JSON.stringify(arr)); }
+function loadChat(user){ const k = CHAT_PREFIX + (user||'guest'); return JSON.parse(localStorage.getItem(k) || '[]'); }
+function loadChatIntoUI(user){ const msgs = loadChat(user||'guest'); $('chatMessages').innerHTML=''; msgs.forEach(m=> appendChat(m.who, m.text)); }
+function loadChat(user){ loadChatIntoUI(user); }
+function canned(t){
+  const s = t.toLowerCase();
+  if(s.includes('appointment')) return 'To book: press Book and follow prompts or tell me date and purpose.';
+  if(s.includes('doctor')) return 'You can view doctors via admin or book appointment to see available doctors.';
+  if(s.includes('subscription')) return 'We support Free, Standard and Premium. Simulated payment available via console helper.';
+  return "Demo assistant — try 'appointment', 'doctor', or 'subscription'.";
+}
+
+/* ---------- Doctor flows ---------- */
+function renderDoctor(username){
+  const d = loadData();
+  const appts = d.appointments.filter(a=>a.doctor===username).sort((a,b)=>a.date.localeCompare(b.date));
+  $('docAppts').innerHTML = appts.length===0 ? '<div class="muted">No upcoming appointments.</div>' : appts.map(a=>`<div style="padding:8px;border-bottom:1px solid rgba(15,23,36,0.03)"><strong>${a.date}</strong> • <div class="muted">${(d.users.find(u=>u.username===a.patient)||{name:a.patient}).name}</div><div class="muted">${a.purpose}</div></div>`).join('');
+  const patients = d.users.filter(u=>u.role==='patient');
+  $('docPatients').innerHTML = patients.map(p=>`<div style="padding:8px;border-bottom:1px solid rgba(15,23,36,0.03)"><strong>${p.name}</strong><div class="muted">${p.email}</div><div class="muted">Prescriptions: ${(p.prescriptions||[]).length}</div></div>`).join('');
+  // populate select
+  const sel = $('presSelect'); sel.innerHTML=''; patients.forEach(p=> { const o = document.createElement('option'); o.value = p.username; o.textContent = `${p.name} (${p.username})`; sel.appendChild(o); });
+}
+
+$('savePres').addEventListener('click', ()=>{
+  const pat = $('presSelect').value; if(!pat) return alert('Select patient');
+  const med = $('presMed').value.trim(); if(!med) return alert('Enter medicine');
+  const dosage = $('presDosage').value.trim(); const duration = $('presDuration').value.trim(); const notes = $('presNotes').value.trim();
+  const d = loadData(); const patient = d.users.find(u=>u.username===pat); const doc = d.users.find(u=>u.username===currentUser);
+  const pres = {id:uid('pres'), date:today(), doctor:currentUser, doctorName:doc ? doc.name : currentUser, medicine:med, dosage, duration, notes};
+  patient.prescriptions = patient.prescriptions || []; patient.prescriptions.unshift(pres); saveData(d); logActivity(currentUser, 'Uploaded prescription for '+pat);
+  alert('Prescription saved to patient record.');
+  // clear inputs
+  $('presMed').value=''; $('presDosage').value=''; $('presDuration').value=''; $('presNotes').value='';
+  renderDoctor(currentUser);
+  if(pat === currentUser) renderPatient(pat);
+});
+
+/* ---------- Admin flows ---------- */
+function renderAdmin(username){
+  const d = loadData();
+  $('adminAppts').innerHTML = d.appointments.length===0 ? '<div class="muted">No appointments</div>' : d.appointments.map(a=>`<div style="padding:8px;border-bottom:1px solid rgba(15,23,36,0.03)"><strong>${a.date}</strong> • <div class="muted">${(d.users.find(u=>u.username===a.patient)||{name:a.patient}).name} → ${(d.users.find(u=>u.username===a.doctor)||{name:a.doctor}).name}</div><div class="muted">${a.purpose}</div></div>`).join('');
+  $('adminDoctors').innerHTML = d.users.filter(u=>u.role==='doctor').map(dr=>`<div style="padding:8px;border-bottom:1px solid rgba(15,23,36,0.03)"><strong>${dr.name}</strong><div class="muted">${dr.email}</div></div>`).join('') || '<div class="muted">No doctors</div>';
+  $('adminAmbs').innerHTML = d.ambRequests && d.ambRequests.length>0 ? d.ambRequests.map(a=>`<div style="padding:8px;border-bottom:1px solid rgba(15,23,36,0.03)"><div><strong>${(d.users.find(u=>u.username===a.patient)||{name:a.patient}).name}</strong> • <span class="muted">${a.type}</span></div><div class="muted">${a.loc} • ${new Date(a.created).toLocaleString()}</div><div style="margin-top:6px"><button class="small" onclick="adminAmbAction('${a.id}','dispatch')">Dispatch</button> <button class="small" onclick="adminAmbAction('${a.id}','complete')">Complete</button></div></div>`).join('') : '<div class="muted">No ambulance requests</div>';
+}
+
+$('addDoc').addEventListener('click', ()=>{
+  const d = loadData(); const username = 'doc_' + Math.random().toString(36).slice(2,7);
+  const doc = {username, name:'Dr ' + username, email:username + '@demo.com', role:'doctor', password:'doctor123', dob:today(), gender:'Other', address:'Clinic'};
+  d.users.push(doc); saveData(d); logActivity(currentUser || 'admin', 'Added doc '+username); renderAdmin();
+  alert('Added doctor: ' + doc.name);
+});
+
+/* Admin ambulance actions */
+function adminAmbAction(id, action){
+  const d = loadData(); const a = d.ambRequests.find(x=>x.id===id); if(!a) return;
+  if(action==='dispatch') a.status='dispatched'; if(action==='complete') a.status='completed'; saveData(d);
+  logActivity(currentUser || 'admin', `Ambulance ${action} for ${a.patient}`); renderAdmin(); renderMyAmbs(a.patient);
+}
+window.adminAmbAction = adminAmbAction;
+
+/* Export CSV */
+$('exportCSV').addEventListener('click', ()=>{
+  const d = loadData(); const rows=[['id','date','patient','doctor','purpose']];
+  d.appointments.forEach(a=> rows.push([a.id,a.date,(d.users.find(u=>u.username===a.patient)||{name:a.patient}).name,(d.users.find(u=>u.username===a.doctor)||{name:a.doctor}).name,a.purpose]));
+  const csv = rows.map(r=> r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'}); const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='appointments.csv'; a.click(); URL.revokeObjectURL(url);
+  logActivity(currentUser || 'admin', 'Exported appointments CSV');
+});
+
+/* ---------- Demo & helpers ---------- */
+$('seedBtn').addEventListener('click', ()=> { if(confirm('Reset demo data? This will overwrite local data.')){ seed(true); logActivity('system','Seeded demo'); alert('Seeded demo data'); renderAuth(); }});
+function demoLogin(username){ seed(); const d = loadData(); const u = d.users.find(x=>x.username===username); if(!u) return alert('User not present. Seed first.'); currentUser = u.username; logActivity(currentUser,'Demo login'); renderAuth(); }
+window.demoLogin = demoLogin;
+
+/* ---------- Init ---------- */
+(function init(){
+  seed(false);
+  renderAuth();
+  // load chat for guest if none
+  loadChatIntoUI(localStorage.getItem('hp_remember_light') || 'guest');
+})();
+</script>
+</body>
+</html>
